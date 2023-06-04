@@ -1,7 +1,8 @@
 module UdGraphic (
     Comanda(..),
     Distancia,
-    Angle
+    Angle,
+    display
     )
     where
 
@@ -12,6 +13,7 @@ import Data.List
 import Control.Monad( liftM, liftM2, liftM3 )
 import System.Random
 import Test.QuickCheck
+import Debug.Trace
 
 infixr 5 :#:
 
@@ -60,6 +62,7 @@ sizeToPoint (Size x y) = Pnt (fromIntegral x) (fromIntegral y)
 
 data Llapis = Color' GL.GLfloat GL.GLfloat GL.GLfloat
             | Transparent
+            | Inkless
             deriving (Eq, Ord, Show)
 
 pencilToRGB :: Llapis -> GL.Color3 GL.GLfloat
@@ -138,14 +141,31 @@ type Distancia = Float
 data Comanda   = Avança Distancia
                | Gira Angle
                | Comanda :#: Comanda
-
+               | Para
+               | CanviaColor Llapis
+               | Branca Comanda
+    deriving (Eq,Show) 
 
 -- Problema 8
 -- Pas de comandes a lines a pintar per GL graphics
+-- Funcio auxiliar
+separa :: Comanda -> [Comanda]
+separa (Avança x) = [Avança x]
+separa (Gira x) = [Gira x]
+separa (c1 :#: c2) = separa c1 ++ separa c2
+separa Para = []
 
+-- Donada una Comanda, retorna una llista de linies 
 execute :: Comanda -> [Ln]
-execute c  =  undefined
+execute c  =  crearLinies (separa c) (Color' 0 0 0) (Pnt 0 0) 0
 
+-- Funcio auxiliar que donada la llista de comandes, el color del llapis, el punt anterior i l'angle actual, crea les linies
+crearLinies :: [Comanda] -> Llapis ->Pnt -> Angle -> [Ln]
+crearLinies [] _ _ _ = []
+crearLinies (Gira x:xs) ll p1 a = crearLinies xs ll p1 a2 
+    where a2 = a - x
+crearLinies (Avança x:xs) ll p1 a = [(Ln ll p1 p2)] ++ crearLinies xs ll p2 a
+    where p2 = p1 + Pnt (x*cos(a*pi/180)) (x*sin(a*pi/180))
 
 -- Rescales all points in a list of lines
 --  from an arbitrary scale

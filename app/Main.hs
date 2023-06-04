@@ -1,4 +1,6 @@
 module Main where
+import Artist
+import UdGraphic
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = display (fletxa 2)
